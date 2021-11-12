@@ -85,7 +85,9 @@
 </template>
 
 <script>
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, watchEffect } from "vue";
+import { todoStorage } from './utils/store'
+console.log(todoStorage, 'todoStorage')
 import "./assets/index.css";
 
 // 1.添加待办事项
@@ -95,6 +97,7 @@ const useAdd = (todos) => {
     const text = input.value && input.value.trim();
     if (text.length === 0) return;
     todos.value.unshift({
+      id: todoStorage.uid++,
       text,
       completed: false,
     });
@@ -174,11 +177,20 @@ const useFilter = todos => {
 
   return { allDone, filteredTodos, remainingCount, count, type }
 }
+// 5.本地存储
+const useStorage = () => {
+  var STORAGE_KEY = "todos-vuejs-3.0";
+  const todos = ref(todoStorage.fetch(STORAGE_KEY))
+  watchEffect(() => {
+    todoStorage.save(STORAGE_KEY, todos.value)
+  })
+  return todos
+}
 
 export default {
   name: "App",
   setup() {
-    const todos = ref([]);
+    const todos = useStorage();
     const { remove, removeCompleted } = useRemove(todos);
     return {
       todos,
